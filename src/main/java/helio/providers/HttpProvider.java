@@ -29,7 +29,7 @@ public class HttpProvider implements DataProvider {
 	private String endpoint;
 	private String method;
 	private String body;
-	private Map<String,String> headers;
+	private Map<String,Object> headers;
 	Logger logger = LoggerFactory.getLogger(HttpProvider.class);
 
 
@@ -47,7 +47,7 @@ public class HttpProvider implements DataProvider {
 			URL url = new URL(endpoint);
 			HttpURLConnection con = (HttpURLConnection) url.openConnection();
 			con.setRequestMethod(method);
-			headers.entrySet().stream().forEach(header -> con.setRequestProperty(header.getKey(), header.getValue()));
+			headers.entrySet().stream().forEach(header -> con.setRequestProperty(header.getKey(), String.valueOf(header.getValue())));
 			// check https://www.baeldung.com/java-http-request for further advanced configurations: cookies, time outs, ...
 			if((method.toLowerCase().equals("post") || method.toLowerCase().equals("put")) && !body.isBlank()) {
 				con.setDoOutput(true);
