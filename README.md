@@ -9,7 +9,7 @@ A set of data providers for data on the web
 
 
 {
-    "source" : "https://github.com/helio-ecosystem/helio-providers-web/releases/download/0.1.0/helio-providers-web-0.1.0.jar",
+    "source" : "https://github.com/helio-ecosystem/helio-providers-web/releases/download/v0.1.1/helio-providers-web-0.1.1.jar",
     "clazz": "helio.providers.HttpProvider",
     "type": "PROVIDER"
   }
