@@ -96,7 +96,7 @@ public class HttpProvider implements DataProvider {
 			throw new IllegalArgumentException("HttpProvider needs to receive json object with the mandatory key 'method'");
 		}
 		if(configuration.has("body")) {
-			String bodyAux = configuration.get("body").getAsString();
+			String bodyAux = configuration.get("body").toString();
 			if(bodyAux.isEmpty()) {
 				throw new IllegalArgumentException("HttpProvider needs to receive non empty value for the key 'body'");
 			}else{
