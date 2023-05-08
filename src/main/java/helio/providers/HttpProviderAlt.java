@@ -2,11 +2,18 @@ package helio.providers;
 
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
+import java.net.URI;
 import java.net.URL;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpRequest.Builder;
+import java.net.http.HttpResponse;
+import java.net.http.HttpResponse.BodyHandlers;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,19 +32,19 @@ import io.reactivex.rxjava3.core.FlowableEmitter;
  * @author Andrea Cimmino
  *
  */
-public class HttpProvider implements DataProvider {
+public class HttpProviderAlt implements DataProvider {
 
 	private String endpoint;
 	private String method;
 	private String body;
 	private Map<String,Object> headers;
-	Logger logger = LoggerFactory.getLogger(HttpProvider.class);
+	Logger logger = LoggerFactory.getLogger(HttpProviderAlt.class);
 
 
 	/**
-	 * This constructor creates an empty {@link HttpProvider} that will need to be configured using a valid {@link JsonObject}
+	 * This constructor creates an empty {@link HttpProviderAlt} that will need to be configured using a valid {@link JsonObject}
 	 */
-	public HttpProvider() {
+	public HttpProviderAlt() {
 		headers= new HashMap<>();
 	}
 
@@ -45,26 +52,25 @@ public class HttpProvider implements DataProvider {
 	public void subscribe(@NonNull FlowableEmitter<@NonNull String> emitter) throws Throwable {
 		
 		try {
-			URL url = new URL(endpoint);
-			HttpURLConnection con = (HttpURLConnection) url.openConnection();
-			con.setRequestMethod(method);
-			if(!body.isEmpty()) {
-				byte[] input = body.getBytes("utf-8");
-				headers.put("Content-Length", input.length);
+			HttpRequest request = null;
+			Builder builder = HttpRequest.newBuilder()
+					  .uri(new URI(endpoint));
+			for(Entry<String, Object> header:headers.entrySet()) {
+				builder.header(header.getKey(), String.valueOf(header.getValue()));
 			}
-			headers.entrySet().stream().forEach(header -> con.setRequestProperty(header.getKey(), String.valueOf(header.getValue())));
-			// check https://www.baeldung.com/java-http-request for further advanced configurations: cookies, time outs, ...
-			if((method.toLowerCase().equals("post") || method.toLowerCase().equals("put")) && !body.isBlank()) {
-				con.setDoOutput(true);
-				try(OutputStream os = con.getOutputStream()) {
-				    byte[] input = body.getBytes("utf-8");
-				    os.write(input, 0, input.length);			
-				}catch(Exception e) {
-					e.printStackTrace();
-				}
+
+			if(method.equalsIgnoreCase("get")) {
+				builder.GET();
+			}else if(method.equalsIgnoreCase("post")) {
+				builder.POST(HttpRequest.BodyPublishers.ofByteArray(body.getBytes()));
 			}
-			String content = new String(con.getInputStream().readAllBytes(), StandardCharsets.UTF_8);
-			emitter.onNext(content);
+			request = builder.build();
+			HttpClient client = HttpClient.newBuilder().build();
+			
+			HttpResponse<String> response = client.send(request, BodyHandlers.ofString());
+			System.out.println(response.statusCode());
+			System.out.println(response.body());
+			emitter.onNext(response.toString());
 			emitter.onComplete();
 		} catch(Exception e) {
 			logger.error(e.toString());
